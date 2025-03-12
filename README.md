@@ -57,7 +57,7 @@ If one wishes to run the game through python, the following steps should be foll
 
 ### Running the game through executable file
 The game has also been compiled into an .exe file! Follow the steps to run the game:
-1. To into the directory `dist/szemeredi_game/`.
+1. Go to into the directory `dist/szemeredi_game/`.
 2. Run the file `szemeredi_game.exe`.
 3. Game should start.
 
