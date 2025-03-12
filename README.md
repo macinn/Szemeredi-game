@@ -60,12 +60,13 @@ The game has also been compiled into an .exe file! Follow the steps to run the g
 1. Go to into the directory `dist/szemeredi_game/`.
 2. Run the file `szemeredi_game.exe`.
 3. Game should start.
+4. Should the game not start, please recompile it locally by running `pyinstaller szemeredi_game.spec` through the virtual environment descibed in the [running-the-game-through-python] section.
 
 ## Developing the game
 If one wishes to develop the game, they are free to do so!  
 Nonetheless, the game has been designed to easily add computer strategies.  
 To add another computer algorithm one should follow the subsequent steps:  
-1. Add a .py file in the `algorithms/` directory with a function describing playing strategy.  
+1. Add a function in the `algorithms/algorithms.py` directory describing a playing strategy.  
 2. Add a (pre-made) decorator to the previously mentioned function `@register_algorithm("Name")` with its given `Name`.  
 3. Run the game through python. The game should automatically find a new algorithm through `@register_algorithm` decorator.  
 4. Run `pyinstaller szemeredi_game.spec` to generate a new .exe file after making changes (user may be asked by terminal to agree to replace the old files, type `y` and the generation will proceed).

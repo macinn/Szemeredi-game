@@ -1,13 +1,13 @@
 import random
 
-def has_arithmetic_progression(k, numbers):
+def has_arithmetic_progression(k: int, numbers: list[int]) -> bool:
     if k <= 1:
         return True
     s = set(numbers)
     sorted_nums = sorted(s)
     n = len(sorted_nums)
     for i in range(n):
-        for j in range(i+1, n):
+        for j in range(i + 1, n):
             d = sorted_nums[j] - sorted_nums[i]
             count = 2
             next_val = sorted_nums[j] + d
@@ -18,12 +18,12 @@ def has_arithmetic_progression(k, numbers):
                 next_val += d
     return False
 
-def find_winning_progression(k, numbers):
+def find_winning_progression(k: int, numbers: list[int]) -> list[int]:
     s = set(numbers)
     sorted_nums = sorted(s)
     n = len(sorted_nums)
     for i in range(n):
-        for j in range(i+1, n):
+        for j in range(i + 1, n):
             d = sorted_nums[j] - sorted_nums[i]
             prog = []
             for m in range(k):
@@ -34,15 +34,15 @@ def find_winning_progression(k, numbers):
                     break
             if len(prog) == k:
                 return prog
-    return None
+    return []
 
-def find_all_arithmetic_progressions(k, numbers):
+def find_all_arithmetic_progressions(k: int, numbers: list[int]) -> list[list[int]]:
     s = set(numbers)
     sorted_nums = sorted(s)
     n = len(sorted_nums)
     progs = []
     for i in range(n):
-        for j in range(i+1, n):
+        for j in range(i + 1, n):
             d = sorted_nums[j] - sorted_nums[i]
             prog = []
             for m in range(k):
@@ -54,6 +54,7 @@ def find_all_arithmetic_progressions(k, numbers):
             if len(prog) == k:
                 progs.append(prog)
     return sorted(progs)
+
 
 def generate_random_subset_with_progression(k, subset_size, lower, bound):
     if subset_size<k or subset_size>(bound-lower+1):
@@ -70,14 +71,3 @@ def generate_random_subset_with_progression(k, subset_size, lower, bound):
     X = list(progression)+additional
     random.shuffle(X)
     return X, sorted(list(progression))
-
-def is_exact_arithmetic_progression(numbers):
-    if len(numbers) < 2:
-        return True
-    sorted_nums = sorted(numbers)
-    d = sorted_nums[1] - sorted_nums[0]
-    for i in range(2, len(sorted_nums)):
-        if sorted_nums[i] - sorted_nums[i-1] != d:
-            return False
-    return True
-
