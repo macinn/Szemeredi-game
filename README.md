@@ -60,7 +60,7 @@ The game has also been compiled into an .exe file! Follow the steps to run the g
 1. Go to into the directory `dist/szemeredi_game/`.
 2. Run the file `szemeredi_game.exe`.
 3. Game should start.
-4. Should the game not start, please recompile it locally by running `pyinstaller szemeredi_game.spec` through the virtual environment descibed in the [running-the-game-through-python] section.
+4. Should the game not start, please recompile it locally by running `pyinstaller szemeredi_game.spec` through the virtual environment descibed in the [This section.](running-the-game-through-python)
 
 ## Developing the game
 If one wishes to develop the game, they are free to do so!  
