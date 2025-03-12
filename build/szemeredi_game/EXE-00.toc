@@ -67,7 +67,7 @@
  [],
  False,
  False,
- 1741747692,
+ 1741750319,
  [('run.exe',
    'D:\\Pulpit\\Szemeredi_Game\\Szemeredi-Gaming\\venv\\lib\\site-packages\\PyInstaller\\bootloader\\Windows-64bit-intel\\run.exe',
    'EXECUTABLE')],

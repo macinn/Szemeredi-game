@@ -107,7 +107,7 @@ def run_game(settings):
     except Exception as e:
         print("Error generating set:", e)
         sys.exit(1)
-    # Check that at least one AP is possible in X.
+    # Compute all arithmetic progressions in the full set X.
     all_possible = find_all_arithmetic_progressions(k, X)
     if not all_possible:
         print("No arithmetic progression of length", k, "found with the given settings.")
@@ -159,7 +159,7 @@ def run_game(settings):
                         if len(player_moves) > k:
                             game_over = True
                             winner = None
-                        elif len(player_moves) == k and set(player_moves) == set(forced_prog):
+                        elif len(player_moves) == k and any(set(player_moves) == set(ap) for ap in all_possible):
                             winner = "Player"
                             game_over = True
                         turn = "computer"
@@ -176,7 +176,7 @@ def run_game(settings):
                 if len(computer_moves) > k:
                     game_over = True
                     winner = None
-                elif len(computer_moves) == k and set(computer_moves) == set(forced_prog):
+                elif len(computer_moves) == k and any(set(computer_moves) == set(ap) for ap in all_possible):
                     winner = "Computer"
                     game_over = True
                 turn = "player"
@@ -202,14 +202,15 @@ def run_game(settings):
         pygame.display.flip()
         clock.tick(30)
     if winner == "Player":
-        win_moves = player_moves
+        win_prog = next((ap for ap in all_possible if set(player_moves) == set(ap)), None)
+    elif winner == "Computer":
+        win_prog = next((ap for ap in all_possible if set(computer_moves) == set(ap)), None)
     else:
-        win_moves = computer_moves
-    win_prog = find_winning_progression(k, win_moves)
-    all_progs = find_all_arithmetic_progressions(k, X)
-    if forced_prog in all_progs:
-        all_progs.remove(forced_prog)
-    result = end_game_screen(screen, font, winner, forced_prog, all_progs, win_prog)
+        win_prog = None
+    # Remove duplicate of forced_prog from the list of APs (if present)
+    if forced_prog in all_possible:
+        all_possible.remove(forced_prog)
+    result = end_game_screen(screen, font, winner, forced_prog, all_possible, win_prog)
     pygame.quit()
     if result == "play_again":
         run_game(settings)
