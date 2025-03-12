@@ -1,10 +1,10 @@
 # Szemerédi's Game
 
-![Main menu](images/2sg.png "Main menu screen")
+![Main menu](images/2sg.PNG "Main menu screen")
 
-![Game GUI](images/1sg.png "Game GUI")
+![Game GUI](images/1sg.PNG "Game GUI")
 
-![Game GUI](images/4sg.png "Game GUI")
+![Game GUI](images/4sg.PNG "Game GUI")
 
 ## Description
 Szemerédi's Game is a strategic game based on arithmetic progressions. The game takes two natural number inputs:
