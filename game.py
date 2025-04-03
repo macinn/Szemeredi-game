@@ -1,7 +1,6 @@
 import pygame, sys, math
 from typing import List, Dict, Any, Set, Optional
-from utils import has_arithmetic_progression, find_winning_progression, find_all_arithmetic_progressions
-from utils import generate_random_subset_with_progression
+from utils import has_arithmetic_progression, find_winning_progression, find_all_arithmetic_progressions, generate_random_subset_with_progression
 from algorithms import registry
 
 BLACK: tuple[int, int, int] = (0, 0, 0)
@@ -95,12 +94,14 @@ def run_game(settings: Dict[str, Any]) -> None:
     lower: int = settings.get("lower", 1)
     bound: int = settings.get("bound", 100)
     ai_choice: str = settings.get("algorithm", "random")
+    # Retrieve the algorithm function that accepts four parameters.
     ai_algorithm = registry.get(ai_choice.lower(), registry.get("random"))
     try:
         X, forced_prog = generate_random_subset_with_progression(k, x, lower, bound)
     except Exception as e:
         print("Error generating set:", e)
         sys.exit(1)
+    # Compute all arithmetic progressions in X.
     all_possible: List[List[int]] = find_all_arithmetic_progressions(k, X)
     if not all_possible:
         print("No arithmetic progression of length", k, "found with the given settings.")
@@ -150,7 +151,8 @@ def run_game(settings: Dict[str, Any]) -> None:
                         cell["color"] = PLAYER_COLOR
                         player_moves.append(cell["value"])
                         available_indices.remove(i)
-                        if has_arithmetic_progression(k, player_moves):
+                        # Check if any AP from all_possible is a subset of player's moves.
+                        if any(set(ap).issubset(set(player_moves)) for ap in all_possible):
                             winner = "Player"
                             game_over = True
                         turn = "computer"
@@ -172,7 +174,7 @@ def run_game(settings: Dict[str, Any]) -> None:
                 cell = cells[chosen_index]
                 cell["color"] = COMPUTER_COLOR
                 computer_moves.append(cell["value"])
-                if has_arithmetic_progression(k, computer_moves):
+                if any(set(ap).issubset(set(computer_moves)) for ap in all_possible):
                     winner = "Computer"
                     game_over = True
                 turn = "player"
@@ -198,9 +200,9 @@ def run_game(settings: Dict[str, Any]) -> None:
         pygame.display.flip()
         clock.tick(30)
     if winner == "Player":
-        win_prog = next((ap for ap in all_possible if set(player_moves) >= set(ap)), None)
+        win_prog = next((ap for ap in all_possible if set(ap).issubset(set(player_moves))), None)
     elif winner == "Computer":
-        win_prog = next((ap for ap in all_possible if set(computer_moves) >= set(ap)), None)
+        win_prog = next((ap for ap in all_possible if set(ap).issubset(set(computer_moves))), None)
     else:
         win_prog = None
     if forced_prog in all_possible:

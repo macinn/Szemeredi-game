@@ -5,4 +5,4 @@ def register_algorithm(name):
         return func
     return decorator
 
-from . import random_ai
+from . import algorithms
