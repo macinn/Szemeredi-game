@@ -80,10 +80,28 @@ def choose_move(available_moves: List[int], current_held: List[int], opponent_he
 
 
 
-@register_algorithm("mcts")
-def choose_move(available_moves: List[int], current_held: List[int], opponent_held: List[int], k: int) -> int:
-    root = MCTSNode(available_moves, current_held, opponent_held, True, k)
+def compare(a: List[int], b: List[int]) -> bool:
+    if len(a) != len(b):
+        return False
+    for i in range(len(a)):
+        if a[i] != b[i]:
+            return False
+    return True
 
+prev_root = None
+@register_algorithm("mcts_cached")
+def choose_move(available_moves: List[int], current_held: List[int], opponent_held: List[int], k: int) -> int:
+    root = None
+    global prev_root
+    if prev_root is not None:
+        for child in prev_root.children:
+            if compare(child.current, current_held) and compare(child.opponent, opponent_held):
+                root = child
+                root.parent = None
+                break
+    if not root:
+        root = MCTSNode(available_moves, current_held, opponent_held, True, k)
+        
     for _ in range(1000):  # number of simulations
         node = root
 
@@ -102,5 +120,32 @@ def choose_move(available_moves: List[int], current_held: List[int], opponent_he
         node.backpropagate(result)
 
     # Choose the move with the most visits
-    best_move = max(root.children, key=lambda c: c.visits).move
-    return best_move
+    best_child = max(root.children, key=lambda c: c.visits)
+    prev_root = best_child
+    return best_child.move
+
+@register_algorithm("mcts")
+def choose_move(available_moves: List[int], current_held: List[int], opponent_held: List[int], k: int) -> int:
+    root = MCTSNode(available_moves, current_held, opponent_held, True, k)
+        
+    for _ in range(1000):  # number of simulations
+        node = root
+
+        # Selection
+        while not node.is_terminal() and node.is_fully_expanded():
+            node = node.best_child()
+
+        # Expansion
+        if not node.is_terminal() and not node.is_fully_expanded():
+            node = node.expand()
+
+        # Simulation
+        result = node.rollout()
+
+        # Backpropagation
+        node.backpropagate(result)
+
+    # Choose the move with the most visits
+    best_child = max(root.children, key=lambda c: c.visits)
+    prev_root = best_child
+    return best_child.move

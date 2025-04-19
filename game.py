@@ -88,6 +88,52 @@ def end_game_screen(screen: pygame.Surface, font: pygame.font.Font, winner: Opti
         pygame.display.flip()
         clock.tick(30)
 
+class Game:
+    def __init__(self, k, x, lower, bound):
+        self.k: int = k
+        self.x: int = x
+        self.lower: int = lower
+        self.bound: int = bound
+        
+        try:
+            self.X, self.forced_prog = generate_random_subset_with_progression(k, x, lower, bound)
+        except Exception as e:
+            print("Error generating set:", e)
+            
+        self.all_possible: List[List[int]] = find_all_arithmetic_progressions(k, self.X)
+        if not self.all_possible:
+            print("No arithmetic progression of length", k, "found with the given settings.")
+            
+        self.player1_moves: List[int] = []
+        self.player2_moves: List[int] = []
+        
+        self.game_over: bool = False
+        self.winner: Optional[int] = None
+        self.player1_turn: bool = True
+        self.turn_count: int = 1
+        self.winning_progression = None
+        self.available_numbers: Set[int] = set(self.X)
+        
+    def make_move(self, value):
+        player_moves = self.player1_moves if self.player1_turn else self.player2_moves
+        player_moves.append(value)
+        self.available_numbers.remove(value)
+        
+        player_moves_set = set(player_moves)
+        for ap in self.all_possible:
+            if set(ap).issubset(player_moves_set):
+                self.winner = 1 if self.player1_turn else 2
+                self.game_over = True
+                self.winning_progression = ap
+                return
+        
+        if not self.available_numbers:
+            self.game_over = True
+            return
+        
+        self.player1_turn = not self.player1_turn
+        self.turn_count += 1
+
 def run_game(settings: Dict[str, Any]) -> None:
     k: int = settings.get("k", 3)
     x: int = settings.get("x", 20)
@@ -96,17 +142,10 @@ def run_game(settings: Dict[str, Any]) -> None:
     ai_choice: str = settings.get("algorithm", "random")
     # Retrieve the algorithm function that accepts four parameters.
     ai_algorithm = registry.get(ai_choice.lower(), registry.get("random"))
-    try:
-        X, forced_prog = generate_random_subset_with_progression(k, x, lower, bound)
-    except Exception as e:
-        print("Error generating set:", e)
-        sys.exit(1)
-    # Compute all arithmetic progressions in X.
-    all_possible: List[List[int]] = find_all_arithmetic_progressions(k, X)
-    if not all_possible:
-        print("No arithmetic progression of length", k, "found with the given settings.")
-        sys.exit(1)
+    game = Game(k, x, lower, bound)
+    
     pygame.init()
+    available_indices: Set[int] = set(range(x))
     screen_width: int = 800
     screen_height: int = 600
     screen: pygame.Surface = pygame.display.set_mode((screen_width, screen_height))
@@ -129,85 +168,74 @@ def run_game(settings: Dict[str, Any]) -> None:
         cx: float = left_margin + col * cell_width + cell_width / 2
         cy: float = top_margin + row * cell_height + cell_height / 2
         rect: pygame.Rect = pygame.Rect(int(cx - radius), int(cy - radius), 2 * radius, 2 * radius)
-        cell: Dict[str, Any] = {"value": X[index], "center": (int(cx), int(cy)), "rect": rect, "color": BLACK}
+        cell: Dict[str, Any] = {"value": game.X[index], "center": (int(cx), int(cy)), "rect": rect, "color": BLACK}
         cells.append(cell)
-    player_moves: List[int] = []
-    computer_moves: List[int] = []
-    available_indices: Set[int] = set(range(x))
-    game_over: bool = False
-    winner: Optional[str] = None
-    turn: str = settings.get("first", "player").lower()
-    turn_count: int = 1
-    while not game_over:
+
+    player_first: bool = settings.get("first", "player").lower() == "player"
+    while not game.game_over:
+        player_turn = game.player1_turn == player_first
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
-            if turn == "player" and event.type == pygame.MOUSEBUTTONDOWN:
+
+            if player_turn and event.type == pygame.MOUSEBUTTONDOWN:
                 pos = pygame.mouse.get_pos()
                 for i in available_indices.copy():
                     cell = cells[i]
                     if cell["rect"].collidepoint(pos):
                         cell["color"] = PLAYER_COLOR
-                        player_moves.append(cell["value"])
                         available_indices.remove(i)
-                        # Check if any AP from all_possible is a subset of player's moves.
-                        if any(set(ap).issubset(set(player_moves)) for ap in all_possible):
-                            winner = "Player"
-                            game_over = True
-                        turn = "computer"
-                        turn_count += 1
+                        game.make_move(cell["value"])
                         break
-        if turn == "computer" and not game_over:
-            if available_indices:
-                available_numbers: List[int] = [cells[i]["value"] for i in available_indices]
-                chosen_number: int = ai_algorithm(available_numbers, computer_moves, player_moves, k)
-                chosen_index: Optional[int] = None
-                for idx in available_indices:
-                    if cells[idx]["value"] == chosen_number:
-                        chosen_index = idx
-                        break
-                if chosen_index is None:
-                    chosen_index = available_indices.pop()
-                else:
-                    available_indices.remove(chosen_index)
-                cell = cells[chosen_index]
-                cell["color"] = COMPUTER_COLOR
-                computer_moves.append(cell["value"])
-                if any(set(ap).issubset(set(computer_moves)) for ap in all_possible):
-                    winner = "Computer"
-                    game_over = True
-                turn = "player"
-                turn_count += 1
-            else:
-                game_over = True
-                winner = None
-        if not available_indices:
-            game_over = True
-            if winner is None:
-                winner = None
+    
+            if not player_turn and not game.game_over:
+                if available_indices:
+                    if game.player1_turn:
+                        computer_moves: List[int] = game.player1_moves
+                        player_moves: List[int] = game.player2_moves
+                    else:
+                        computer_moves: List[int] = game.player2_moves
+                        player_moves: List[int] = game.player1_moves
+                        
+                    chosen_number: int = ai_algorithm(list(game.available_numbers), 
+                                                      computer_moves, 
+                                                      player_moves, game.k)
+                    chosen_index: Optional[int] = None
+                    for idx in available_indices:
+                        if cells[idx]["value"] == chosen_number:
+                            chosen_index = idx
+                            break
+                    if chosen_index is None:
+                        chosen_index = available_indices.pop()
+                    else:
+                        available_indices.remove(chosen_index)
+                    cell = cells[chosen_index]
+                    cell["color"] = COMPUTER_COLOR
+                    game.make_move(chosen_number)
+
         screen.fill(WHITE)
         for cell in cells:
             pygame.draw.circle(screen, cell["color"], cell["center"], radius)
             pygame.draw.circle(screen, BLACK, cell["center"], radius, 2)
             draw_text_with_outline(screen, str(cell["value"]), font, cell["center"])
-        turn_text: str = f"Turn: {turn.capitalize()}"
-        count_text: str = f"Turn Number: {turn_count}"
+        
+        winner = "Player" if player_turn else "Computer"
+        turn_text: str = f"Turn: {winner}"
+        count_text: str = f"Turn Number: {game.turn_count}"
         turn_surf = font.render(turn_text, True, BLACK)
         count_surf = font.render(count_text, True, BLACK)
         screen.blit(turn_surf, (10, 10))
         screen.blit(count_surf, (10, 40))
         pygame.display.flip()
         clock.tick(30)
-    if winner == "Player":
-        win_prog = next((ap for ap in all_possible if set(ap).issubset(set(player_moves))), None)
-    elif winner == "Computer":
-        win_prog = next((ap for ap in all_possible if set(ap).issubset(set(computer_moves))), None)
-    else:
-        win_prog = None
-    if forced_prog in all_possible:
-        all_possible.remove(forced_prog)
-    result: str = end_game_screen(screen, font, winner, forced_prog, all_possible, win_prog)
+        
+    win_prog = game.winning_progression
+    
+    if game.forced_prog in game.all_possible:
+        game.all_possible.remove(game.forced_prog)
+
+    result: str = end_game_screen(screen, font, winner, game.forced_prog, game.all_possible, win_prog)
     pygame.quit()
     if result == "play_again":
         run_game(settings)
