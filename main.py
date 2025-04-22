@@ -50,19 +50,7 @@ def settings_screen() -> dict:
                     algo_box["open"] = not algo_box["open"]
                 elif first_box["rect"].collidepoint(event.pos):
                     first_box["open"] = not first_box["open"]
-                else:
-                    if algo_box["open"]:
-                        for i, option in enumerate(algo_box["options"]):
-                            opt_rect = pygame.Rect(
-                                algo_box["rect"].x,
-                                algo_box["rect"].y + algo_box["rect"].h + i * option_height - algo_box["scroll_offset"],
-                                algo_box["rect"].w,
-                                option_height
-                            )
-                            if opt_rect.collidepoint(event.pos):
-                                algo_box["selected"] = option
-                                algo_box["open"] = False
-                                break
+                elif first_box["open"] or algo_box["open"]:
                     if first_box["open"]:
                         for i, option in enumerate(first_box["options"]):
                             opt_rect = pygame.Rect(
@@ -75,13 +63,25 @@ def settings_screen() -> dict:
                                 first_box["selected"] = option
                                 first_box["open"] = False
                                 break
+                    if algo_box["open"]:
+                        for i, option in enumerate(algo_box["options"]):
+                            opt_rect = pygame.Rect(
+                                algo_box["rect"].x,
+                                algo_box["rect"].y + algo_box["rect"].h + i * option_height - algo_box["scroll_offset"],
+                                algo_box["rect"].w,
+                                option_height
+                            )
+                            if opt_rect.collidepoint(event.pos):
+                                algo_box["selected"] = option
+                                algo_box["open"] = False
+                                break
                     for key, box in input_boxes.items():
                         if box["rect"].collidepoint(event.pos):
                             active_box = key
                             break
                     else:
                         active_box = None
-                if start_button.collidepoint(event.pos):
+                elif start_button.collidepoint(event.pos):
                     try:
                         k_val = int(input_boxes["k"]["text"])
                         x_val = int(input_boxes["x"]["text"])
@@ -99,7 +99,7 @@ def settings_screen() -> dict:
                         input_boxes["bound"]["text"] = "100"
                         algo_box["selected"] = algo_box["options"][0]
                         first_box["selected"] = "player"
-                if exit_button.collidepoint(event.pos):
+                elif exit_button.collidepoint(event.pos):
                     pygame.quit()
                     sys.exit()
             if event.type == pygame.MOUSEWHEEL:
@@ -128,17 +128,6 @@ def settings_screen() -> dict:
         screen.blit(algo_txt, (algo_box["rect"].x + 5, algo_box["rect"].y + 5))
         label = font.render("algorithm", True, (255, 255, 255))
         screen.blit(label, (algo_box["rect"].x - 150, algo_box["rect"].y + 5))
-        if algo_box["open"]:
-            for i, option in enumerate(algo_box["options"]):
-                opt_rect = pygame.Rect(
-                    algo_box["rect"].x,
-                    algo_box["rect"].y + algo_box["rect"].h + i * option_height - algo_box["scroll_offset"],
-                    algo_box["rect"].w,
-                    option_height
-                )
-                pygame.draw.rect(screen, color_inactive, opt_rect, 2)
-                opt_txt = font.render(option, True, (255, 255, 255))
-                screen.blit(opt_txt, (opt_rect.x + 5, opt_rect.y + 5))
         pygame.draw.rect(screen, color_inactive, first_box["rect"], 2)
         first_txt = font.render(first_box["selected"], True, (255, 255, 255))
         screen.blit(first_txt, (first_box["rect"].x + 5, first_box["rect"].y + 5))
@@ -163,6 +152,18 @@ def settings_screen() -> dict:
         exit_text = font.render("Exit Game", True, (255, 255, 255))
         exit_rect = exit_text.get_rect(center=exit_button.center)
         screen.blit(exit_text, exit_rect)
+        if algo_box["open"]:
+            for i, option in enumerate(algo_box["options"]):
+                opt_rect = pygame.Rect(
+                    algo_box["rect"].x,
+                    algo_box["rect"].y + algo_box["rect"].h + i * option_height - algo_box["scroll_offset"],
+                    algo_box["rect"].w,
+                    option_height
+                )
+                pygame.draw.rect(screen, (50, 50, 50), opt_rect)
+                pygame.draw.rect(screen, color_inactive, opt_rect, 2)
+                opt_txt = font.render(option, True, (255, 255, 255))
+                screen.blit(opt_txt, (opt_rect.x + 5, opt_rect.y + 5))
         if error_msg:
             err_text = font.render(error_msg, True, (255, 0, 0))
             screen.blit(err_text, (250, 430))
